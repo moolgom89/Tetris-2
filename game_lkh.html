@@ -590,8 +590,6 @@
             }
 
             mergePiece() {
-                let isGameOver = false;
-                
                 for (let i = 0; i < this.currentPiece.shape.length; i++) {
                     for (let j = 0; j < this.currentPiece.shape[i].length; j++) {
                         if (this.currentPiece.shape[i][j]) {
@@ -600,7 +598,8 @@
                             
                             // 블록이 상단에 도달했는지 확인
                             if (newY <= 1) {
-                                isGameOver = true;
+                                this.showGameOver();
+                                return;
                             }
                             
                             if (newY >= 0 && newY < GRID_HEIGHT && newX >= 0 && newX < GRID_WIDTH) {
@@ -608,13 +607,6 @@
                             }
                         }
                     }
-                }
-                
-                // 게임오버 조건 확인
-                if (isGameOver) {
-                    this.state = "gameOver";
-                    this.gameOver();
-                    return;
                 }
             }
 
@@ -947,15 +939,12 @@
                     } else {
                         this.mergePiece();
                         
-                        // 게임오버 상태가 아닐 때만 계속 진행
                         if (this.state !== "gameOver") {
                             this.clearLines();
                             this.currentPiece = this.newPiece();
                             
-                            // 새 블록을 놓을 공간이 없으면 게임오버
                             if (!this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y)) {
-                                this.state = "gameOver";
-                                this.gameOver();
+                                this.showGameOver();
                                 return;
                             }
                         }
@@ -1008,25 +997,25 @@
                 });
             }
 
-            gameOver() {
-                // 게임 상태를 gameOver로 설정
+            showGameOver() {
                 this.state = "gameOver";
                 
-                // 게임오버 화면 표시
-                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                // 전체 화면을 어둡게
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
                 this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
                 
-                // GAME OVER 텍스트
+                // GAME OVER 텍스트 (더 크게)
                 this.ctx.fillStyle = '#ff0000';
-                this.ctx.font = 'bold 50px Arial';
+                this.ctx.font = 'bold 60px Arial';
                 this.ctx.textAlign = 'center';
-                this.ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 60);
+                this.ctx.textBaseline = 'middle';
+                this.ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 80);
                 
-                // 최종 점수와 레벨 표시
+                // 최종 점수와 레벨 표시 (크게)
                 this.ctx.fillStyle = '#fff';
-                this.ctx.font = '30px Arial';
+                this.ctx.font = 'bold 36px Arial';
                 this.ctx.fillText(`Final Score: ${this.score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
-                this.ctx.fillText(`Level: ${this.level}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 40);
+                this.ctx.fillText(`Level: ${this.level}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 50);
                 
                 // 랭킹에 현재 점수 추가
                 this.rankings.push({
@@ -1049,20 +1038,44 @@
                 
                 // 랭킹 위치 표시
                 this.ctx.fillStyle = '#FFD700';
-                this.ctx.fillText(`Rank: ${playerRank}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 80);
+                this.ctx.fillText(`Rank: ${playerRank}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 100);
                 
-                // Restart 버튼
-                this.ctx.fillStyle = '#4CAF50';
-                this.ctx.fillRect(CANVAS_WIDTH / 2 - 200, CANVAS_HEIGHT / 2 + 120, 180, 50);
-                this.ctx.fillStyle = '#fff';
-                this.ctx.font = '24px Arial';
-                this.ctx.fillText('Restart', CANVAS_WIDTH / 2 - 110, CANVAS_HEIGHT / 2 + 150);
+                // 버튼 배경 그라데이션
+                const restartGradient = this.ctx.createLinearGradient(
+                    CANVAS_WIDTH / 2 - 200, CANVAS_HEIGHT / 2 + 160,
+                    CANVAS_WIDTH / 2 - 200, CANVAS_HEIGHT / 2 + 210
+                );
+                restartGradient.addColorStop(0, '#4CAF50');
+                restartGradient.addColorStop(1, '#45a049');
                 
-                // Menu 버튼
-                this.ctx.fillStyle = '#2196F3';
-                this.ctx.fillRect(CANVAS_WIDTH / 2 + 20, CANVAS_HEIGHT / 2 + 120, 180, 50);
+                const menuGradient = this.ctx.createLinearGradient(
+                    CANVAS_WIDTH / 2 + 20, CANVAS_HEIGHT / 2 + 160,
+                    CANVAS_WIDTH / 2 + 20, CANVAS_HEIGHT / 2 + 210
+                );
+                menuGradient.addColorStop(0, '#2196F3');
+                menuGradient.addColorStop(1, '#1e88e5');
+                
+                // Restart 버튼 (더 크고 눈에 띄게)
+                this.ctx.fillStyle = restartGradient;
+                this.ctx.fillRect(CANVAS_WIDTH / 2 - 200, CANVAS_HEIGHT / 2 + 160, 180, 50);
+                // 버튼 테두리
+                this.ctx.strokeStyle = '#fff';
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(CANVAS_WIDTH / 2 - 200, CANVAS_HEIGHT / 2 + 160, 180, 50);
+                
                 this.ctx.fillStyle = '#fff';
-                this.ctx.fillText('Menu', CANVAS_WIDTH / 2 + 110, CANVAS_HEIGHT / 2 + 150);
+                this.ctx.font = 'bold 28px Arial';
+                this.ctx.fillText('Restart', CANVAS_WIDTH / 2 - 110, CANVAS_HEIGHT / 2 + 190);
+                
+                // Menu 버튼 (더 크고 눈에 띄게)
+                this.ctx.fillStyle = menuGradient;
+                this.ctx.fillRect(CANVAS_WIDTH / 2 + 20, CANVAS_HEIGHT / 2 + 160, 180, 50);
+                // 버튼 테두리
+                this.ctx.strokeStyle = '#fff';
+                this.ctx.strokeRect(CANVAS_WIDTH / 2 + 20, CANVAS_HEIGHT / 2 + 160, 180, 50);
+                
+                this.ctx.fillStyle = '#fff';
+                this.ctx.fillText('Menu', CANVAS_WIDTH / 2 + 110, CANVAS_HEIGHT / 2 + 190);
                 
                 // 랭킹 디스플레이 업데이트
                 this.updateRankingDisplay();
