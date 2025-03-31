@@ -507,15 +507,27 @@
                         const x = e.clientX - rect.left;
                         const y = e.clientY - rect.top;
                         
-                        // Continue 버튼 영역 확인
-                        if (x >= CANVAS_WIDTH / 2 - 100 && 
-                            x <= CANVAS_WIDTH / 2 + 100 &&
-                            y >= CANVAS_HEIGHT / 2 + 120 && 
-                            y <= CANVAS_HEIGHT / 2 + 170) {
-                            this.state = "menu";
-                            this.showMenu();
-                            document.getElementById('player-name-input').value = '';
-                            document.getElementById('current-player').textContent = '';
+                        const scale = rect.width / CANVAS_WIDTH;
+                        const adjustedX = x / scale;
+                        const adjustedY = y / scale;
+                        
+                        // Restart 버튼 영역 확인
+                        if (adjustedY >= CANVAS_HEIGHT / 2 + 120 && 
+                            adjustedY <= CANVAS_HEIGHT / 2 + 170) {
+                            if (adjustedX >= CANVAS_WIDTH / 2 - 200 && 
+                                adjustedX <= CANVAS_WIDTH / 2 - 20) {
+                                // Restart
+                                this.playerName = this.playerName || "Player";
+                                document.getElementById('current-player').textContent = `Player: ${this.playerName}`;
+                                this.startGame();
+                            } else if (adjustedX >= CANVAS_WIDTH / 2 + 20 && 
+                                     adjustedX <= CANVAS_WIDTH / 2 + 200) {
+                                // Menu
+                                this.state = "menu";
+                                this.showMenu();
+                                document.getElementById('player-name-input').value = '';
+                                document.getElementById('current-player').textContent = '';
+                            }
                         }
                     }
                 });
@@ -567,7 +579,8 @@
                             const newY = y + i;
                             if (newX < 0 || newX >= GRID_WIDTH || newY >= GRID_HEIGHT ||
                                 (newY >= 0 && this.grid[newY][newX])) {
-                                if (newY <= 0) {
+                                // 상단에 닿았는지 확인
+                                if (newY <= 1) {  // 상단 2줄에 닿으면 게임오버
                                     this.gameOver();
                                     return false;
                                 }
@@ -1020,12 +1033,19 @@
                 this.ctx.fillStyle = '#FFD700';  // 골드 색상
                 this.ctx.fillText(`Rank: ${playerRank}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 80);
                 
-                // Continue 버튼 표시
+                // 버튼 표시
+                // Restart 버튼
                 this.ctx.fillStyle = '#4CAF50';  // 초록색
-                this.ctx.fillRect(CANVAS_WIDTH / 2 - 100, CANVAS_HEIGHT / 2 + 120, 200, 50);
+                this.ctx.fillRect(CANVAS_WIDTH / 2 - 200, CANVAS_HEIGHT / 2 + 120, 180, 50);
                 this.ctx.fillStyle = '#fff';
                 this.ctx.font = '24px Arial';
-                this.ctx.fillText('Continue', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 150);
+                this.ctx.fillText('Restart', CANVAS_WIDTH / 2 - 110, CANVAS_HEIGHT / 2 + 150);
+                
+                // Menu 버튼
+                this.ctx.fillStyle = '#2196F3';  // 파란색
+                this.ctx.fillRect(CANVAS_WIDTH / 2 + 20, CANVAS_HEIGHT / 2 + 120, 180, 50);
+                this.ctx.fillStyle = '#fff';
+                this.ctx.fillText('Menu', CANVAS_WIDTH / 2 + 110, CANVAS_HEIGHT / 2 + 150);
                 
                 // localStorage에 랭킹 저장
                 localStorage.setItem('tetrisRankings', JSON.stringify(this.rankings));
@@ -1035,15 +1055,6 @@
                 
                 // 게임오버 사운드 재생
                 playSound('gameOver');
-                
-                // 3초 후에 메뉴로 돌아가기
-                setTimeout(() => {
-                    this.state = "menu";
-                    this.showMenu();
-                    // 이름 입력창 초기화
-                    document.getElementById('player-name-input').value = '';
-                    document.getElementById('current-player').textContent = '';
-                }, 3000);
             }
         }
 
