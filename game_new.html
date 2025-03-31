@@ -386,6 +386,14 @@
                 document.addEventListener('keydown', (e) => {
                     this.handleKeyPress(e);
                 });
+
+                // Add touch event listener for hard drop
+                this.canvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (this.state === "playing") {
+                        this.hardDrop();
+                    }
+                });
                 
                 this.state = "menu";
                 this.showMenu();
@@ -743,6 +751,27 @@
 
                 this.draw();
                 requestAnimationFrame(() => this.gameLoop());
+            }
+
+            // Add hard drop method
+            hardDrop() {
+                if (!this.currentPiece) return;
+                
+                while (this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y + 1)) {
+                    this.currentPiece.y++;
+                }
+                
+                playSound('hardDrop');
+                this.mergePiece();
+                this.clearLines();
+                this.currentPiece = this.newPiece();
+                
+                if (!this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y)) {
+                    this.gameOver = true;
+                    this.state = "menu";
+                    playSound('gameOver');
+                    this.showMenu();
+                }
             }
         }
 
