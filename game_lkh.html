@@ -868,6 +868,9 @@
             }
 
             handleKeyPress(event) {
+                // 게임오버 상태에서는 키 입력 무시
+                if (this.state === "gameOver") return;
+                
                 if (this.state !== "playing" && event.key !== 'Escape') return;
 
                 // 방향키 스크롤 방지
@@ -880,58 +883,66 @@
 
                 switch(event.key) {
                     case 'ArrowLeft':
-                        if (this.validMove(this.currentPiece, this.currentPiece.x - 1, this.currentPiece.y)) {
+                        if (!this.isPaused && this.validMove(this.currentPiece, this.currentPiece.x - 1, this.currentPiece.y)) {
                             this.currentPiece.x--;
                             moved = true;
                         }
                         break;
                     case 'ArrowRight':
-                        if (this.validMove(this.currentPiece, this.currentPiece.x + 1, this.currentPiece.y)) {
+                        if (!this.isPaused && this.validMove(this.currentPiece, this.currentPiece.x + 1, this.currentPiece.y)) {
                             this.currentPiece.x++;
                             moved = true;
                         }
                         break;
                     case 'ArrowDown':
-                        if (this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y + 1)) {
+                        if (!this.isPaused && this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y + 1)) {
                             this.currentPiece.y++;
                             moved = true;
                             soundType = 'drop';
                         }
                         break;
                     case 'ArrowUp':
-                        const rotated = this.currentPiece.shape[0].map((_, i) =>
-                            this.currentPiece.shape.map(row => row[row.length - 1 - i]));
-                        if (this.validMove({...this.currentPiece, shape: rotated},
-                            this.currentPiece.x, this.currentPiece.y)) {
-                            this.currentPiece.shape = rotated;
-                            moved = true;
-                            soundType = 'rotate';
+                        if (!this.isPaused) {
+                            const rotated = this.currentPiece.shape[0].map((_, i) =>
+                                this.currentPiece.shape.map(row => row[row.length - 1 - i]));
+                            if (this.validMove({...this.currentPiece, shape: rotated},
+                                this.currentPiece.x, this.currentPiece.y)) {
+                                this.currentPiece.shape = rotated;
+                                moved = true;
+                                soundType = 'rotate';
+                            }
                         }
                         break;
                     case ' ':
-                        let dropDistance = 0;
-                        while (this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y + 1)) {
-                            this.currentPiece.y++;
-                            dropDistance++;
-                            moved = true;
-                        }
-                        if (dropDistance > 0) {
-                            soundType = 'hardDrop';
-                            this.mergePiece();
-                            this.clearLines();
-                            this.currentPiece = this.newPiece();
-                            if (!this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y)) {
-                                this.gameOver();
-                                return;
+                        if (!this.isPaused) {
+                            let dropDistance = 0;
+                            while (this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y + 1)) {
+                                this.currentPiece.y++;
+                                dropDistance++;
+                                moved = true;
+                            }
+                            if (dropDistance > 0) {
+                                soundType = 'hardDrop';
+                                this.mergePiece();
+                                if (this.state !== "gameOver") {
+                                    this.clearLines();
+                                    this.currentPiece = this.newPiece();
+                                    if (!this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y)) {
+                                        this.showGameOver();
+                                        return;
+                                    }
+                                }
                             }
                         }
                         break;
                     case 'Escape':
-                        this.togglePause();
+                        if (this.state !== "gameOver") {
+                            this.togglePause();
+                        }
                         break;
                 }
                 
-                if (moved) {
+                if (moved && !this.isPaused) {
                     playSound(soundType);
                 }
                 
@@ -1014,15 +1025,15 @@
                 cancelAnimationFrame(this.animationFrame);
                 
                 // 전체 화면을 어둡게 (더 진하게)
-                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
                 this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
                 
                 // GAME OVER 텍스트 (더 크고 눈에 띄게)
                 this.ctx.fillStyle = '#ff0000';
-                this.ctx.font = 'bold 72px Arial';
+                this.ctx.font = 'bold 80px Arial';
                 this.ctx.textAlign = 'center';
                 this.ctx.textBaseline = 'middle';
-                this.ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 100);
+                this.ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 120);
                 
                 // 최종 점수와 레벨 표시 (더 크게)
                 this.ctx.fillStyle = '#fff';
@@ -1054,20 +1065,20 @@
                 this.ctx.fillText(`Rank: ${playerRank}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 120);
                 
                 // 버튼 크기와 위치 조정
-                const buttonWidth = 200;
-                const buttonHeight = 60;
+                const buttonWidth = 220;
+                const buttonHeight = 70;
                 const buttonY = CANVAS_HEIGHT / 2 + 180;
                 
                 // Restart 버튼 (더 크고 눈에 띄게)
                 this.ctx.fillStyle = '#4CAF50';
                 this.ctx.fillRect(CANVAS_WIDTH / 2 - buttonWidth - 20, buttonY, buttonWidth, buttonHeight);
                 this.ctx.strokeStyle = '#fff';
-                this.ctx.lineWidth = 3;
+                this.ctx.lineWidth = 4;
                 this.ctx.strokeRect(CANVAS_WIDTH / 2 - buttonWidth - 20, buttonY, buttonWidth, buttonHeight);
                 
                 this.ctx.fillStyle = '#fff';
-                this.ctx.font = 'bold 32px Arial';
-                this.ctx.fillText('Restart', CANVAS_WIDTH / 2 - buttonWidth + 80, buttonY + 38);
+                this.ctx.font = 'bold 36px Arial';
+                this.ctx.fillText('Restart', CANVAS_WIDTH / 2 - buttonWidth + 90, buttonY + 43);
                 
                 // Menu 버튼 (더 크고 눈에 띄게)
                 this.ctx.fillStyle = '#2196F3';
@@ -1076,13 +1087,16 @@
                 this.ctx.strokeRect(CANVAS_WIDTH / 2 + 20, buttonY, buttonWidth, buttonHeight);
                 
                 this.ctx.fillStyle = '#fff';
-                this.ctx.fillText('Menu', CANVAS_WIDTH / 2 + 120, buttonY + 38);
+                this.ctx.fillText('Menu', CANVAS_WIDTH / 2 + 130, buttonY + 43);
                 
                 // 랭킹 디스플레이 업데이트
                 this.updateRankingDisplay();
                 
                 // 게임오버 사운드 재생
                 playSound('gameOver');
+                
+                // 현재 피스 제거
+                this.currentPiece = null;
             }
         }
 
