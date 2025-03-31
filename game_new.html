@@ -32,6 +32,7 @@
             background-color: #111;
             margin: 0 auto;
             touch-action: none;
+            border: 2px solid #333;
         }
         #menu {
             position: fixed;
@@ -558,13 +559,33 @@
                 this.ctx.fillStyle = '#000';
                 this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-                // Draw grid
+                // Draw grid lines
+                this.ctx.strokeStyle = '#333';
+                this.ctx.lineWidth = 1;
+
+                // Vertical lines
+                for (let x = 0; x <= GRID_WIDTH; x++) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x * BLOCK_SIZE, 0);
+                    this.ctx.lineTo(x * BLOCK_SIZE, CANVAS_HEIGHT);
+                    this.ctx.stroke();
+                }
+
+                // Horizontal lines
+                for (let y = 0; y <= GRID_HEIGHT; y++) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, y * BLOCK_SIZE);
+                    this.ctx.lineTo(CANVAS_WIDTH, y * BLOCK_SIZE);
+                    this.ctx.stroke();
+                }
+
+                // Draw grid blocks
                 for (let y = 0; y < GRID_HEIGHT; y++) {
                     for (let x = 0; x < GRID_WIDTH; x++) {
                         if (this.grid[y][x]) {
                             this.ctx.fillStyle = this.grid[y][x];
-                            this.ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE,
-                                BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+                            this.ctx.fillRect(x * BLOCK_SIZE + 1, y * BLOCK_SIZE + 1,
+                                BLOCK_SIZE - 2, BLOCK_SIZE - 2);
                         }
                     }
                 }
@@ -576,9 +597,9 @@
                         for (let j = 0; j < this.currentPiece.shape[i].length; j++) {
                             if (this.currentPiece.shape[i][j]) {
                                 this.ctx.fillRect(
-                                    (this.currentPiece.x + j) * BLOCK_SIZE,
-                                    (this.currentPiece.y + i) * BLOCK_SIZE,
-                                    BLOCK_SIZE - 1, BLOCK_SIZE - 1
+                                    (this.currentPiece.x + j) * BLOCK_SIZE + 1,
+                                    (this.currentPiece.y + i) * BLOCK_SIZE + 1,
+                                    BLOCK_SIZE - 2, BLOCK_SIZE - 2
                                 );
                             }
                         }
