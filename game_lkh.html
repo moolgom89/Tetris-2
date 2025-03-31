@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tetris</title>
+    <title>Tetris LKH</title>
     <style>
         body {
             margin: 0;
@@ -18,6 +18,39 @@
             box-sizing: border-box;
             touch-action: none;
         }
+        .game-wrapper {
+            display: flex;
+            width: 100%;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+        }
+        #ranking-container {
+            width: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        #ranking-title {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 15px;
+            color: #FFD700;
+        }
+        #ranking-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .ranking-item {
+            padding: 5px;
+            margin-bottom: 5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .ranking-item .rank {
+            color: #FFD700;
+            margin-right: 10px;
+        }
         #game-container {
             display: flex;
             flex-direction: column;
@@ -27,6 +60,7 @@
             width: 100%;
             max-width: 800px;
             margin: 0 auto;
+            position: relative;
         }
         canvas {
             background-color: #111;
@@ -36,20 +70,18 @@
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
         }
         #menu {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
             display: none;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
         }
         #menu.active {
-            display: flex;
+            display: block;
         }
         .title {
             color: #fff;
@@ -64,9 +96,20 @@
             font-size: 20px;
             cursor: pointer;
             transition: background-color 0.3s;
+            margin: 10px 0;
+            width: 200px;
         }
         .button:hover {
             background-color: #0000c8;
+        }
+        #player-name-input {
+            padding: 10px;
+            font-size: 18px;
+            width: 180px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 5px;
         }
         #score-display {
             color: #fff;
@@ -77,6 +120,12 @@
             gap: 20px;
             justify-content: center;
             width: 100%;
+        }
+        .current-player {
+            color: #FFD700;
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 20px;
         }
         #mobileControls {
             display: none;
@@ -217,26 +266,34 @@
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="game-canvas"></canvas>
-        <div id="menu">
-            <div class="title">TETRIS</div>
-            <button id="start-button" class="button">Start Game</button>
+    <div class="game-wrapper">
+        <div id="ranking-container">
+            <div id="ranking-title">RANKING TOP 20</div>
+            <ul id="ranking-list"></ul>
         </div>
-        <div id="score-display">
-            Score: <span id="score">0</span>
-            Level: <span id="level">1</span>
-        </div>
-        <div id="mobileControls">
-            <div class="controlRow">
-                <button class="controlBtn" id="leftBtn">←</button>
-                <button class="controlBtn" id="rotateBtn">↻</button>
-                <button class="controlBtn" id="rightBtn">→</button>
+        <div id="game-container">
+            <div class="current-player" id="current-player"></div>
+            <canvas id="game-canvas"></canvas>
+            <div id="menu">
+                <div class="title">TETRIS</div>
+                <input type="text" id="player-name-input" placeholder="Enter your name" maxlength="10">
+                <button id="start-button" class="button">Start Game</button>
             </div>
-            <div class="controlRow">
-                <button class="controlBtn" id="dropBtn">↓</button>
-                <button class="controlBtn" id="hardDropBtn">⤓</button>
-                <button class="controlBtn" id="pauseBtn">⏸</button>
+            <div id="score-display">
+                Score: <span id="score">0</span>
+                Level: <span id="level">1</span>
+            </div>
+            <div id="mobileControls">
+                <div class="controlRow">
+                    <button class="controlBtn" id="leftBtn">←</button>
+                    <button class="controlBtn" id="rotateBtn">↻</button>
+                    <button class="controlBtn" id="rightBtn">→</button>
+                </div>
+                <div class="controlRow">
+                    <button class="controlBtn" id="dropBtn">↓</button>
+                    <button class="controlBtn" id="hardDropBtn">⤓</button>
+                    <button class="controlBtn" id="pauseBtn">⏸</button>
+                </div>
             </div>
         </div>
     </div>
@@ -373,8 +430,20 @@
                 this.scoreElement = document.getElementById('score');
                 this.levelElement = document.getElementById('level');
                 
+                this.rankings = JSON.parse(localStorage.getItem('tetrisRankings')) || [];
+                this.playerName = '';
+                this.updateRankingDisplay();
+                
                 this.startButton.addEventListener('click', () => {
-                    this.startGame();
+                    const nameInput = document.getElementById('player-name-input');
+                    const name = nameInput.value.trim();
+                    if (name) {
+                        this.playerName = name;
+                        document.getElementById('current-player').textContent = `Player: ${name}`;
+                        this.startGame();
+                    } else {
+                        alert('Please enter your name!');
+                    }
                 });
                 
                 document.addEventListener('keydown', (e) => {
@@ -396,10 +465,7 @@
                             this.clearLines();
                             this.currentPiece = this.newPiece();
                             if (!this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y)) {
-                                this.gameOver = true;
-                                this.state = "menu";
-                                playSound('gameOver');
-                                this.showMenu();
+                                this.gameOver();
                             }
                             this.draw();
                         }
@@ -426,6 +492,7 @@
 
             showMenu() {
                 this.menu.classList.add('active');
+                document.getElementById('player-name-input').focus();
             }
 
             hideMenu() {
@@ -762,10 +829,7 @@
                             this.clearLines();
                             this.currentPiece = this.newPiece();
                             if (!this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y)) {
-                                this.gameOver = true;
-                                this.state = "menu";
-                                playSound('gameOver');
-                                this.showMenu();
+                                this.gameOver();
                                 return;
                             }
                         }
@@ -794,10 +858,7 @@
                         this.clearLines();
                         this.currentPiece = this.newPiece();
                         if (!this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y)) {
-                            this.gameOver = true;
-                            this.state = "menu";
-                            playSound('gameOver');
-                            this.showMenu();
+                            this.gameOver();
                             return;
                         }
                     }
@@ -822,11 +883,47 @@
                 this.currentPiece = this.newPiece();
                 
                 if (!this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y)) {
-                    this.gameOver = true;
-                    this.state = "menu";
-                    playSound('gameOver');
-                    this.showMenu();
+                    this.gameOver();
                 }
+            }
+
+            updateRankingDisplay() {
+                const rankingList = document.getElementById('ranking-list');
+                rankingList.innerHTML = '';
+                
+                const sortedRankings = [...this.rankings].sort((a, b) => b.score - a.score).slice(0, 20);
+                
+                sortedRankings.forEach((ranking, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'ranking-item';
+                    li.innerHTML = `<span class="rank">${index + 1}</span>${ranking.name} - ${ranking.score}`;
+                    rankingList.appendChild(li);
+                });
+            }
+
+            gameOver() {
+                this.gameOver = true;
+                this.state = "menu";
+                
+                // 랭킹에 현재 점수 추가
+                this.rankings.push({
+                    name: this.playerName,
+                    score: this.score,
+                    date: new Date().toISOString()
+                });
+                
+                // localStorage에 랭킹 저장
+                localStorage.setItem('tetrisRankings', JSON.stringify(this.rankings));
+                
+                // 랭킹 디스플레이 업데이트
+                this.updateRankingDisplay();
+                
+                playSound('gameOver');
+                this.showMenu();
+                
+                // 이름 입력창 초기화
+                document.getElementById('player-name-input').value = '';
+                document.getElementById('current-player').textContent = '';
             }
         }
 
@@ -863,10 +960,7 @@
                             game.clearLines();
                             game.currentPiece = game.newPiece();
                             if (!game.validMove(game.currentPiece, game.currentPiece.x, game.currentPiece.y)) {
-                                game.gameOver = true;
-                                game.state = "menu";
-                                playSound('gameOver');
-                                game.showMenu();
+                                game.gameOver();
                             }
                             game.draw();
                         }
