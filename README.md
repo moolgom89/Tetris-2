@@ -40,4 +40,4 @@ pip install -r requirements.txt
 - Clear lines to score points
 - Each line cleared gives you 100 points × current level
 - Game speed increases as you level up
-- Game ends when pieces stack up to the top 
+- Game ends when pieces stack up to the top # Tetris-2
