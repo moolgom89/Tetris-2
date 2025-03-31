@@ -248,7 +248,7 @@
         const CANVAS_HEIGHT = BLOCK_SIZE * GRID_HEIGHT;
 
         const SHAPES = [
-            [[1, 1, 1, 1]],  // I
+            [[1, 1, 1, 1]],  // I (LKH♥ block)
             [[1, 1], [1, 1]],  // O
             [[1, 1, 1], [0, 1, 0]],  // T
             [[1, 1, 1], [1, 0, 0]],  // L
@@ -258,19 +258,13 @@
         ];
 
         const COLORS = [
-            '#00ffff',  // BRIGHT CYAN - I
-            '#008888',  // DARK CYAN - I
-            '#ffff00',  // BRIGHT YELLOW - O
-            '#888800',  // DARK YELLOW - O
-            '#ff00ff',  // BRIGHT MAGENTA - T
-            '#880088',  // DARK MAGENTA - T
-            '#ffa500',  // BRIGHT ORANGE - L
-            '#885500',  // DARK ORANGE - L
-            '#0000ff',  // BRIGHT BLUE - J
-            '#000088',  // DARK BLUE - J
-            '#00ff00',  // BRIGHT GREEN - S
-            '#008800',  // DARK GREEN - S
-            '#ff0000'   // RED - Z
+            '#FFD700',  // Gold color for LKH♥ block
+            '#ffff00',  // Yellow - O
+            '#ff00ff',  // Magenta - T
+            '#ffa500',  // Orange - L
+            '#0000ff',  // Blue - J
+            '#00ff00',  // Green - S
+            '#ff0000'   // Red - Z
         ];
 
         // Sound effects using Web Audio API
@@ -626,6 +620,28 @@
                             this.ctx.lineWidth = 1;
                             this.ctx.strokeRect(x * BLOCK_SIZE + 1, y * BLOCK_SIZE + 1,
                                 BLOCK_SIZE - 2, BLOCK_SIZE - 2);
+
+                            // Draw LKH♥ characters if it's the gold block
+                            if (this.grid[y][x] === '#FFD700') {
+                                this.ctx.fillStyle = '#000';
+                                this.ctx.font = '20px Arial';
+                                this.ctx.textAlign = 'center';
+                                this.ctx.textBaseline = 'middle';
+                                const letters = ['L', 'K', 'H', '♥'];
+                                const letter = letters[x % 4];
+                                
+                                // Make heart red and smaller
+                                if (letter === '♥') {
+                                    this.ctx.fillStyle = '#ff0000';
+                                    this.ctx.font = '16px Arial';
+                                }
+                                
+                                this.ctx.fillText(
+                                    letter,
+                                    x * BLOCK_SIZE + BLOCK_SIZE / 2,
+                                    y * BLOCK_SIZE + BLOCK_SIZE / 2
+                                );
+                            }
                         }
                     }
                 }
@@ -646,6 +662,28 @@
                                 this.ctx.strokeStyle = '#fff';
                                 this.ctx.lineWidth = 1;
                                 this.ctx.strokeRect(x, y, BLOCK_SIZE - 2, BLOCK_SIZE - 2);
+
+                                // Draw LKH♥ characters if it's the gold block
+                                if (this.currentPiece.color === '#FFD700') {
+                                    this.ctx.fillStyle = '#000';
+                                    this.ctx.font = '20px Arial';
+                                    this.ctx.textAlign = 'center';
+                                    this.ctx.textBaseline = 'middle';
+                                    const letters = ['L', 'K', 'H', '♥'];
+                                    const letter = letters[j];
+                                    
+                                    // Make heart red and smaller
+                                    if (letter === '♥') {
+                                        this.ctx.fillStyle = '#ff0000';
+                                        this.ctx.font = '16px Arial';
+                                    }
+                                    
+                                    this.ctx.fillText(
+                                        letter,
+                                        x + BLOCK_SIZE / 2,
+                                        y + BLOCK_SIZE / 2
+                                    );
+                                }
                             }
                         }
                     }
