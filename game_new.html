@@ -6,22 +6,27 @@
     <title>Tetris</title>
     <style>
         body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             background-color: #000;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            font-family: Arial, sans-serif;
-            touch-action: none;
-        }
-        #game-container {
-            position: relative;
-            margin-top: 20px;
+            padding: 10px;
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 800px;
         }
         canvas {
-            border: 2px solid #333;
+            background-color: #111;
+            margin: 0 auto;
         }
         #menu {
             position: absolute;
@@ -65,7 +70,7 @@
             display: none;
             margin-top: 20px;
             width: 100%;
-            max-width: 300px;
+            max-width: 320px;
             position: relative;
             z-index: 1000;
         }
@@ -75,14 +80,14 @@
             margin: 10px 0;
         }
         .controlBtn {
-            width: 70px;
-            height: 70px;
-            margin: 0 10px;
+            width: 50px;
+            height: 50px;
+            margin: 0 5px;
             border: 2px solid rgba(255, 255, 255, 0.5);
             border-radius: 50%;
             background-color: rgba(0, 0, 0, 0.5);
             color: white;
-            font-size: 28px;
+            font-size: 24px;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
             display: flex;
@@ -103,22 +108,38 @@
             margin: 20px 0;
         }
         @media (max-width: 768px) {
-            #game-container {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                width: 100%;
+            body {
                 padding: 10px;
-                box-sizing: border-box;
+            }
+            #game-container {
+                padding: 0;
             }
             canvas {
-                max-width: 100%;
+                width: 100%;
+                max-width: 320px;
                 height: auto;
             }
             #mobileControls {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
+                width: 100%;
+                max-width: 320px;
+                margin-top: 20px;
+            }
+            .controlBtn {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+                margin: 0 5px;
+            }
+        }
+        @media (max-width: 375px) {
+            canvas {
+                max-width: 280px;
+            }
+            .controlBtn {
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+                margin: 0 4px;
             }
         }
     </style>
@@ -614,14 +635,28 @@
 
         // Add responsive canvas sizing
         function resizeCanvas() {
+            const canvas = document.querySelector('canvas');
             const container = document.getElementById('game-container');
-            const canvas = document.getElementById('game-canvas');
-            const maxWidth = Math.min(window.innerWidth - 20, CANVAS_WIDTH);
-            const scale = maxWidth / CANVAS_WIDTH;
+            const isMobile = window.innerWidth <= 768;
             
-            canvas.style.width = `${CANVAS_WIDTH * scale}px`;
-            canvas.style.height = `${CANVAS_HEIGHT * scale}px`;
+            if (isMobile) {
+                // 모바일에서는 화면 너비의 80%로 설정
+                const screenWidth = window.innerWidth;
+                const targetWidth = Math.min(screenWidth * 0.8, 320);
+                const scale = targetWidth / CANVAS_WIDTH;
+                
+                canvas.style.width = `${targetWidth}px`;
+                canvas.style.height = `${CANVAS_HEIGHT * scale}px`;
+            } else {
+                // 데스크톱에서는 원래 크기 유지
+                canvas.style.width = `${CANVAS_WIDTH}px`;
+                canvas.style.height = `${CANVAS_HEIGHT}px`;
+            }
         }
+
+        // 화면 크기 변경 시 자동으로 조정
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', resizeCanvas);
     </script>
 </body>
 </html> 
