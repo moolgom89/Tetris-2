@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris</title>
+    <style>
+        body {
+            background-color: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            position: relative;
+            margin-top: 20px;
+        }
+        canvas {
+            border: 2px solid #fff;
+        }
+        #menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            display: none;
+        }
+        #menu.active {
+            display: block;
+        }
+        .title {
+            color: #fff;
+            font-size: 48px;
+            margin-bottom: 30px;
+        }
+        .button {
+            background-color: #00f;
+            color: #fff;
+            border: 2px solid #fff;
+            padding: 15px 40px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #0000c8;
+        }
+        #score-display {
+            color: #fff;
+            font-size: 20px;
+            margin-top: 20px;
+            text-align: center;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        <div id="menu">
+            <div class="title">TETRIS</div>
+            <button id="start-button" class="button">Start Game</button>
+        </div>
+        <div id="score-display">
+            Score: <span id="score">0</span>
+            Level: <span id="level">1</span>
+        </div>
+    </div>
+    <script>
+        const BLOCK_SIZE = 35;
+        const GRID_WIDTH = 13;
+        const GRID_HEIGHT = 24;
+        const CANVAS_WIDTH = BLOCK_SIZE * GRID_WIDTH;
+        const CANVAS_HEIGHT = BLOCK_SIZE * GRID_HEIGHT;
+
+        const SHAPES = [
+            [[1, 1, 1, 1]],  // I
+            [[1, 1], [1, 1]],  // O
+            [[1, 1, 1], [0, 1, 0]],  // T
+            [[1, 1, 1], [1, 0, 0]],  // L
+            [[1, 1, 1], [0, 0, 1]],  // J
+            [[1, 1, 0], [0, 1, 1]],  // S
+            [[0, 1, 1], [1, 1, 0]]   // Z
+        ];
+
+        const COLORS = [
+            '#00ffff',  // BRIGHT CYAN - I
+            '#008888',  // DARK CYAN - I
+            '#ffff00',  // BRIGHT YELLOW - O
+            '#888800',  // DARK YELLOW - O
+            '#ff00ff',  // BRIGHT MAGENTA - T
+            '#880088',  // DARK MAGENTA - T
+            '#ffa500',  // BRIGHT ORANGE - L
+            '#885500',  // DARK ORANGE - L
+            '#0000ff',  // BRIGHT BLUE - J
+            '#000088',  // DARK BLUE - J
+            '#00ff00',  // BRIGHT GREEN - S
+            '#008800',  // DARK GREEN - S
+            '#ff0000'   // RED - Z
+        ];
+
+        // Sound effects using Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Create a more pleasant synth sound
+        function createSynth(frequency, duration, type = 'sine', gain = 0.2) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const now = audioContext.currentTime;
+            
+            // Create a second oscillator for richer sound
+            const oscillator2 = audioContext.createOscillator();
+            const gainNode2 = audioContext.createGain();
+            
+            // Connect nodes
+            oscillator.connect(gainNode);
+            oscillator2.connect(gainNode2);
+            gainNode.connect(audioContext.destination);
+            gainNode2.connect(audioContext.destination);
+            
+            // Main oscillator settings
+            oscillator.type = type;
+            oscillator.frequency.value = frequency;
+            
+            // Second oscillator for harmony
+            oscillator2.type = 'sine';
+            oscillator2.frequency.value = frequency * 2;
+            
+            // Volume envelope
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(gain, now + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration);
+            
+            gainNode2.gain.setValueAtTime(0, now);
+            gainNode2.gain.linearRampToValueAtTime(gain, now + 0.01);
+            gainNode2.gain.exponentialRampToValueAtTime(0.01, now + duration);
+            
+            // Start and stop
+            oscillator.start(now);
+            oscillator2.start(now);
+            oscillator.stop(now + duration);
+            oscillator2.stop(now + duration);
+        }
+
+        // Function to play sound
+        function playSound(soundName) {
+            try {
+                switch(soundName) {
+                    case 'move':
+                        createSynth(440, 0.15, 'sine'); // A4
+                        break;
+                    case 'rotate':
+                        createSynth(587.33, 0.2, 'triangle'); // D5
+                        break;
+                    case 'drop':
+                        createSynth(392, 0.3, 'square'); // G4
+                        break;
+                    case 'clear':
+                        // 더 화려한 클리어 사운드
+                        createSynth(783.99, 0.3, 'sine', 0.5); // G5
+                        setTimeout(() => createSynth(987.77, 0.3, 'sine', 0.4), 100); // B5
+                        setTimeout(() => createSynth(1174.66, 0.3, 'sine', 0.3), 200); // D6
+                        setTimeout(() => createSynth(1567.98, 0.4, 'sine', 0.2), 300); // G6
+                        break;
+                    case 'gameOver':
+                        // 드라마틱한 게임오버 사운드
+                        createSynth(261.63, 0.6, 'sine', 0.4); // C4
+                        setTimeout(() => createSynth(207.65, 0.6, 'sine', 0.4), 100); // Ab3
+                        setTimeout(() => createSynth(164.81, 0.8, 'sine', 0.4), 200); // E3
+                        break;
+                }
+            } catch (e) {
+                console.error('Error playing sound:', e);
+            }
+        }
+
+        // Initialize audio context on first interaction
+        document.addEventListener('click', function initAudio() {
+            audioContext.resume();
+            document.removeEventListener('click', initAudio);
+        }, { once: true });
+
+        class Tetris {
+            constructor() {
+                this.canvas = document.getElementById('game-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.canvas.width = CANVAS_WIDTH;
+                this.canvas.height = CANVAS_HEIGHT;
+                
+                this.menu = document.getElementById('menu');
+                this.startButton = document.getElementById('start-button');
+                this.scoreElement = document.getElementById('score');
+                this.levelElement = document.getElementById('level');
+                
+                this.startButton.addEventListener('click', () => {
+                    this.startGame();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    this.handleKeyPress(e);
+                });
+                
+                this.state = "menu";
+                this.showMenu();
+                this.particles = [];
+            }
+
+            init() {
+                this.grid = Array(GRID_HEIGHT).fill().map(() => Array(GRID_WIDTH).fill(0));
+                this.score = 0;
+                this.level = 1;
+                this.fallSpeed = 1000;
+                this.lastFall = Date.now();
+                this.gameOver = false;
+                this.currentPiece = this.newPiece();
+                
+                this.updateScore();
+            }
+
+            showMenu() {
+                this.menu.classList.add('active');
+            }
+
+            hideMenu() {
+                this.menu.classList.remove('active');
+            }
+
+            startGame() {
+                this.state = "playing";
+                this.hideMenu();
+                this.init();
+                this.gameLoop();
+            }
+
+            newPiece() {
+                const idx = Math.floor(Math.random() * SHAPES.length);
+                return {
+                    shape: SHAPES[idx],
+                    color: COLORS[idx],
+                    x: Math.floor(GRID_WIDTH / 2) - Math.floor(SHAPES[idx][0].length / 2),
+                    y: 0
+                };
+            }
+
+            validMove(piece, x, y) {
+                for (let i = 0; i < piece.shape.length; i++) {
+                    for (let j = 0; j < piece.shape[i].length; j++) {
+                        if (piece.shape[i][j]) {
+                            const newX = x + j;
+                            const newY = y + i;
+                            if (newX < 0 || newX >= GRID_WIDTH || newY >= GRID_HEIGHT ||
+                                (newY >= 0 && this.grid[newY][newX])) {
+                                return false;
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+
+            mergePiece() {
+                for (let i = 0; i < this.currentPiece.shape.length; i++) {
+                    for (let j = 0; j < this.currentPiece.shape[i].length; j++) {
+                        if (this.currentPiece.shape[i][j]) {
+                            this.grid[this.currentPiece.y + i][this.currentPiece.x + j] = this.currentPiece.color;
+                        }
+                    }
+                }
+            }
+
+            // Add particle effect system
+            createParticles(y) {
+                const particleCount = 50; // 더 많은 파티클
+                for (let i = 0; i < particleCount; i++) {
+                    this.particles.push({
+                        x: Math.random() * CANVAS_WIDTH,
+                        y: y * BLOCK_SIZE + BLOCK_SIZE / 2,
+                        vx: (Math.random() - 0.5) * 15, // 더 빠른 속도
+                        vy: (Math.random() - 2) * 15,   // 더 빠른 속도
+                        size: Math.random() * 8 + 4,    // 더 큰 크기
+                        color: COLORS[Math.floor(Math.random() * COLORS.length)], // 테트리스 블록 색상 사용
+                        alpha: 1
+                    });
+                }
+            }
+
+            updateParticles() {
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.5; // 더 강한 중력
+                    p.alpha -= 0.01; // 더 천천히 사라짐
+                    if (p.alpha <= 0) {
+                        this.particles.splice(i, 1);
+                    }
+                }
+            }
+
+            drawParticles() {
+                this.particles.forEach(p => {
+                    this.ctx.save();
+                    this.ctx.globalAlpha = p.alpha;
+                    this.ctx.fillStyle = p.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.restore();
+                });
+            }
+
+            clearLines() {
+                let linesCleared = 0;
+                for (let i = GRID_HEIGHT - 1; i >= 0; i--) {
+                    if (this.grid[i].every(cell => cell !== 0)) {
+                        // 라인이 사라지기 전에 현재 라인의 색상을 저장
+                        const lineColors = [...this.grid[i]];
+                        
+                        // 플래시 효과
+                        this.ctx.fillStyle = '#fff';
+                        this.ctx.fillRect(0, i * BLOCK_SIZE, CANVAS_WIDTH, BLOCK_SIZE);
+                        
+                        // 각 블록 위치에 파티클 생성
+                        for (let x = 0; x < GRID_WIDTH; x++) {
+                            if (lineColors[x] !== 0) {
+                                const particleCount = 10;
+                                for (let p = 0; p < particleCount; p++) {
+                                    this.particles.push({
+                                        x: x * BLOCK_SIZE + BLOCK_SIZE / 2,
+                                        y: i * BLOCK_SIZE + BLOCK_SIZE / 2,
+                                        vx: (Math.random() - 0.5) * 15,
+                                        vy: (Math.random() - 2) * 15,
+                                        size: Math.random() * 8 + 4,
+                                        color: lineColors[x],
+                                        alpha: 1
+                                    });
+                                }
+                            }
+                        }
+                        
+                        this.grid.splice(i, 1);
+                        this.grid.unshift(Array(GRID_WIDTH).fill(0));
+                        linesCleared++;
+                        i++;
+                    }
+                }
+                if (linesCleared > 0) {
+                    // 향상된 클리어 사운드
+                    playSound('clear');
+                    
+                    this.score += linesCleared * 100 * this.level;
+                    this.level = Math.floor(this.score / 1000) + 1;
+                    this.fallSpeed = Math.max(100, 1000 - (this.level - 1) * 100);
+                    this.updateScore();
+                }
+            }
+
+            rotatePiece() {
+                const rotated = this.currentPiece.shape[0].map((_, i) =>
+                    this.currentPiece.shape.map(row => row[row.length - 1 - i]));
+                
+                if (this.validMove({...this.currentPiece, shape: rotated},
+                    this.currentPiece.x, this.currentPiece.y)) {
+                    this.currentPiece.shape = rotated;
+                }
+            }
+
+            updateScore() {
+                this.scoreElement.textContent = this.score;
+                this.levelElement.textContent = this.level;
+            }
+
+            draw() {
+                this.ctx.fillStyle = '#000';
+                this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+                // Draw grid
+                for (let y = 0; y < GRID_HEIGHT; y++) {
+                    for (let x = 0; x < GRID_WIDTH; x++) {
+                        if (this.grid[y][x]) {
+                            this.ctx.fillStyle = this.grid[y][x];
+                            this.ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE,
+                                BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+                        }
+                    }
+                }
+
+                // Draw current piece
+                if (this.currentPiece) {
+                    this.ctx.fillStyle = this.currentPiece.color;
+                    for (let i = 0; i < this.currentPiece.shape.length; i++) {
+                        for (let j = 0; j < this.currentPiece.shape[i].length; j++) {
+                            if (this.currentPiece.shape[i][j]) {
+                                this.ctx.fillRect(
+                                    (this.currentPiece.x + j) * BLOCK_SIZE,
+                                    (this.currentPiece.y + i) * BLOCK_SIZE,
+                                    BLOCK_SIZE - 1, BLOCK_SIZE - 1
+                                );
+                            }
+                        }
+                    }
+                }
+
+                // Draw particles
+                this.updateParticles();
+                this.drawParticles();
+            }
+
+            handleKeyPress(event) {
+                if (this.state !== "playing") return;
+
+                let moved = false;
+                switch(event.key) {
+                    case 'ArrowLeft':
+                        if (this.validMove(this.currentPiece, this.currentPiece.x - 1, this.currentPiece.y)) {
+                            this.currentPiece.x--;
+                            moved = true;
+                        }
+                        break;
+                    case 'ArrowRight':
+                        if (this.validMove(this.currentPiece, this.currentPiece.x + 1, this.currentPiece.y)) {
+                            this.currentPiece.x++;
+                            moved = true;
+                        }
+                        break;
+                    case 'ArrowDown':
+                        if (this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y + 1)) {
+                            this.currentPiece.y++;
+                            moved = true;
+                        }
+                        break;
+                    case 'ArrowUp':
+                        const rotated = this.currentPiece.shape[0].map((_, i) =>
+                            this.currentPiece.shape.map(row => row[row.length - 1 - i]));
+                        if (this.validMove({...this.currentPiece, shape: rotated},
+                            this.currentPiece.x, this.currentPiece.y)) {
+                            this.currentPiece.shape = rotated;
+                        }
+                        break;
+                    case ' ':
+                        while (this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y + 1)) {
+                            this.currentPiece.y++;
+                            moved = true;
+                        }
+                        break;
+                    case 'Escape':
+                        this.state = "menu";
+                        this.showMenu();
+                        break;
+                }
+                
+                if (moved) {
+                    playSound('move');
+                }
+                
+                this.draw();
+            }
+
+            gameLoop() {
+                if (this.state !== "playing") return;
+
+                const now = Date.now();
+                if (now - this.lastFall > this.fallSpeed) {
+                    if (this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y + 1)) {
+                        this.currentPiece.y++;
+                    } else {
+                        this.mergePiece();
+                        this.clearLines();
+                        this.currentPiece = this.newPiece();
+                        if (!this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y)) {
+                            this.gameOver = true;
+                            this.state = "menu";
+                            playSound('gameOver');
+                            this.showMenu();
+                            return;
+                        }
+                    }
+                    this.lastFall = now;
+                }
+
+                this.draw();
+                requestAnimationFrame(() => this.gameLoop());
+            }
+        }
+
+        // Start the game
+        window.onload = () => {
+            new Tetris();
+        };
+    </script>
+</body>
+</html> 
