@@ -577,12 +577,8 @@
                         if (piece.shape[i][j]) {
                             const newX = x + j;
                             const newY = y + i;
-                            // 상단 충돌 체크
-                            if (newY <= 1 && this.grid[newY][newX]) {
-                                this.state = "gameOver";
-                                this.gameOver();
-                                return false;
-                            }
+                            
+                            // 게임 영역을 벗어나거나 다른 블록과 충돌하는 경우
                             if (newX < 0 || newX >= GRID_WIDTH || newY >= GRID_HEIGHT ||
                                 (newY >= 0 && this.grid[newY][newX])) {
                                 return false;
@@ -594,19 +590,31 @@
             }
 
             mergePiece() {
+                let isGameOver = false;
+                
                 for (let i = 0; i < this.currentPiece.shape.length; i++) {
                     for (let j = 0; j < this.currentPiece.shape[i].length; j++) {
                         if (this.currentPiece.shape[i][j]) {
                             const newY = this.currentPiece.y + i;
-                            // 상단 도달 체크
+                            const newX = this.currentPiece.x + j;
+                            
+                            // 블록이 상단에 도달했는지 확인
                             if (newY <= 1) {
-                                this.state = "gameOver";
-                                this.gameOver();
-                                return;
+                                isGameOver = true;
                             }
-                            this.grid[newY][this.currentPiece.x + j] = this.currentPiece.color;
+                            
+                            if (newY >= 0 && newY < GRID_HEIGHT && newX >= 0 && newX < GRID_WIDTH) {
+                                this.grid[newY][newX] = this.currentPiece.color;
+                            }
                         }
                     }
+                }
+                
+                // 게임오버 조건 확인
+                if (isGameOver) {
+                    this.state = "gameOver";
+                    this.gameOver();
+                    return;
                 }
             }
 
@@ -938,11 +946,13 @@
                         this.currentPiece.y++;
                     } else {
                         this.mergePiece();
-                        // 게임오버 상태가 아닐 때만 새 블록 생성
-                        if (this.state === "playing") {
+                        
+                        // 게임오버 상태가 아닐 때만 계속 진행
+                        if (this.state !== "gameOver") {
                             this.clearLines();
                             this.currentPiece = this.newPiece();
-                            // 새 블록이 생성될 공간이 없으면 게임오버
+                            
+                            // 새 블록을 놓을 공간이 없으면 게임오버
                             if (!this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y)) {
                                 this.state = "gameOver";
                                 this.gameOver();
@@ -999,12 +1009,15 @@
             }
 
             gameOver() {
-                // 게임오버 메시지와 최종 점수 표시
+                // 게임 상태를 gameOver로 설정
+                this.state = "gameOver";
+                
+                // 게임오버 화면 표시
                 this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
                 this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
                 
                 // GAME OVER 텍스트
-                this.ctx.fillStyle = '#ff0000';  // 빨간색으로 변경
+                this.ctx.fillStyle = '#ff0000';
                 this.ctx.font = 'bold 50px Arial';
                 this.ctx.textAlign = 'center';
                 this.ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 60);
@@ -1023,8 +1036,9 @@
                     date: new Date().toISOString()
                 });
                 
-                // 랭킹을 점수 순으로 정렬
+                // 랭킹 정렬 및 저장
                 this.rankings.sort((a, b) => b.score - a.score);
+                localStorage.setItem('tetrisRankings', JSON.stringify(this.rankings));
                 
                 // 현재 플레이어의 랭킹 위치 찾기
                 const playerRank = this.rankings.findIndex(r => 
@@ -1034,25 +1048,21 @@
                 ) + 1;
                 
                 // 랭킹 위치 표시
-                this.ctx.fillStyle = '#FFD700';  // 골드 색상
+                this.ctx.fillStyle = '#FFD700';
                 this.ctx.fillText(`Rank: ${playerRank}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 80);
                 
-                // 버튼 표시
                 // Restart 버튼
-                this.ctx.fillStyle = '#4CAF50';  // 초록색
+                this.ctx.fillStyle = '#4CAF50';
                 this.ctx.fillRect(CANVAS_WIDTH / 2 - 200, CANVAS_HEIGHT / 2 + 120, 180, 50);
                 this.ctx.fillStyle = '#fff';
                 this.ctx.font = '24px Arial';
                 this.ctx.fillText('Restart', CANVAS_WIDTH / 2 - 110, CANVAS_HEIGHT / 2 + 150);
                 
                 // Menu 버튼
-                this.ctx.fillStyle = '#2196F3';  // 파란색
+                this.ctx.fillStyle = '#2196F3';
                 this.ctx.fillRect(CANVAS_WIDTH / 2 + 20, CANVAS_HEIGHT / 2 + 120, 180, 50);
                 this.ctx.fillStyle = '#fff';
                 this.ctx.fillText('Menu', CANVAS_WIDTH / 2 + 110, CANVAS_HEIGHT / 2 + 150);
-                
-                // localStorage에 랭킹 저장
-                localStorage.setItem('tetrisRankings', JSON.stringify(this.rankings));
                 
                 // 랭킹 디스플레이 업데이트
                 this.updateRankingDisplay();
