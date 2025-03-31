@@ -32,7 +32,8 @@
             background-color: #111;
             margin: 0 auto;
             touch-action: none;
-            border: 2px solid #333;
+            border: 4px solid #444;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
         }
         #menu {
             position: fixed;
@@ -320,35 +321,37 @@
             if (!audioContext) return;
             
             try {
-                // 오디오 컨텍스트가 suspended 상태인 경우 resume
                 if (audioContext.state === 'suspended') {
                     audioContext.resume();
                 }
                 
+                // 즉시 사운드 재생을 위해 현재 시간 사용
+                const now = audioContext.currentTime;
+                
                 switch(soundName) {
                     case 'move':
-                        createSynth(440, 0.1, 'sine', 0.3); // A4
+                        createSynth(440, 0.05, 'sine', 0.2); // 더 짧고 조용한 이동 사운드
                         break;
                     case 'rotate':
-                        createSynth(587.33, 0.1, 'triangle', 0.3); // D5
+                        createSynth(587.33, 0.08, 'triangle', 0.2); // 더 짧은 회전 사운드
                         break;
                     case 'drop':
-                        createSynth(392, 0.2, 'square', 0.3); // G4
+                        createSynth(392, 0.1, 'square', 0.2); // 더 짧은 드롭 사운드
                         break;
                     case 'hardDrop':
-                        createSynth(523.25, 0.3, 'square', 0.4); // C5
+                        createSynth(523.25, 0.15, 'square', 0.3); // 하드 드롭 사운드
+                        setTimeout(() => createSynth(784, 0.1, 'square', 0.2), 50); // 추가 효과음
                         break;
                     case 'clear':
-                        // 더 화려한 클리어 사운드
-                        createSynth(783.99, 0.3, 'sine', 0.5); // G5
-                        setTimeout(() => createSynth(987.77, 0.3, 'sine', 0.4), 100); // B5
-                        setTimeout(() => createSynth(1174.66, 0.3, 'sine', 0.3), 200); // D6
-                        setTimeout(() => createSynth(1567.98, 0.4, 'sine', 0.2), 300); // G6
+                        createSynth(783.99, 0.15, 'sine', 0.3);
+                        setTimeout(() => createSynth(987.77, 0.15, 'sine', 0.3), 50);
+                        setTimeout(() => createSynth(1174.66, 0.15, 'sine', 0.3), 100);
+                        setTimeout(() => createSynth(1567.98, 0.2, 'sine', 0.3), 150);
                         break;
                     case 'gameOver':
-                        createSynth(261.63, 0.6, 'sine', 0.4); // C4
-                        setTimeout(() => createSynth(207.65, 0.6, 'sine', 0.4), 100); // Ab3
-                        setTimeout(() => createSynth(164.81, 0.8, 'sine', 0.4), 200); // E3
+                        createSynth(261.63, 0.3, 'sine', 0.3);
+                        setTimeout(() => createSynth(207.65, 0.3, 'sine', 0.3), 100);
+                        setTimeout(() => createSynth(164.81, 0.4, 'sine', 0.3), 200);
                         break;
                 }
             } catch (e) {
@@ -559,6 +562,11 @@
                 this.ctx.fillStyle = '#000';
                 this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
+                // Draw outer border
+                this.ctx.strokeStyle = '#666';
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
                 // Draw grid lines
                 this.ctx.strokeStyle = '#333';
                 this.ctx.lineWidth = 1;
@@ -579,28 +587,40 @@
                     this.ctx.stroke();
                 }
 
-                // Draw grid blocks
+                // Draw blocks with border
                 for (let y = 0; y < GRID_HEIGHT; y++) {
                     for (let x = 0; x < GRID_WIDTH; x++) {
                         if (this.grid[y][x]) {
+                            // Block background
                             this.ctx.fillStyle = this.grid[y][x];
                             this.ctx.fillRect(x * BLOCK_SIZE + 1, y * BLOCK_SIZE + 1,
+                                BLOCK_SIZE - 2, BLOCK_SIZE - 2);
+                            
+                            // Block border
+                            this.ctx.strokeStyle = '#fff';
+                            this.ctx.lineWidth = 1;
+                            this.ctx.strokeRect(x * BLOCK_SIZE + 1, y * BLOCK_SIZE + 1,
                                 BLOCK_SIZE - 2, BLOCK_SIZE - 2);
                         }
                     }
                 }
 
-                // Draw current piece
+                // Draw current piece with border
                 if (this.currentPiece) {
                     this.ctx.fillStyle = this.currentPiece.color;
                     for (let i = 0; i < this.currentPiece.shape.length; i++) {
                         for (let j = 0; j < this.currentPiece.shape[i].length; j++) {
                             if (this.currentPiece.shape[i][j]) {
-                                this.ctx.fillRect(
-                                    (this.currentPiece.x + j) * BLOCK_SIZE + 1,
-                                    (this.currentPiece.y + i) * BLOCK_SIZE + 1,
-                                    BLOCK_SIZE - 2, BLOCK_SIZE - 2
-                                );
+                                const x = (this.currentPiece.x + j) * BLOCK_SIZE + 1;
+                                const y = (this.currentPiece.y + i) * BLOCK_SIZE + 1;
+                                
+                                // Block background
+                                this.ctx.fillRect(x, y, BLOCK_SIZE - 2, BLOCK_SIZE - 2);
+                                
+                                // Block border
+                                this.ctx.strokeStyle = '#fff';
+                                this.ctx.lineWidth = 1;
+                                this.ctx.strokeRect(x, y, BLOCK_SIZE - 2, BLOCK_SIZE - 2);
                             }
                         }
                     }
