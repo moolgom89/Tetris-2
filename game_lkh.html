@@ -645,9 +645,19 @@
                     // 향상된 클리어 사운드
                     playSound('clear');
                     
+                    // 점수 계산 (라인 수에 따른 점수)
                     this.score += linesCleared * 100 * this.level;
-                    this.level = Math.floor(this.score / 1000) + 1;
-                    this.fallSpeed = Math.max(100, 1000 - (this.level - 1) * 100);
+                    
+                    // 레벨 업 시스템 (20개 라인 클리어마다 레벨업)
+                    const newLevel = Math.floor(this.score / 1000) + 1;
+                    if (newLevel > this.level) {
+                        this.level = newLevel;
+                        // 레벨업 시 속도 증가 (최대 10배까지)
+                        this.fallSpeed = Math.max(100, 1000 - (this.level - 1) * 100);
+                        // 레벨업 효과음 추가
+                        playSound('clear');
+                    }
+                    
                     this.updateScore();
                 }
             }
@@ -919,12 +929,19 @@
                 const rankingList = document.getElementById('ranking-list');
                 rankingList.innerHTML = '';
                 
-                const sortedRankings = [...this.rankings].sort((a, b) => b.score - a.score).slice(0, 20);
+                const sortedRankings = [...this.rankings]
+                    .sort((a, b) => b.score - a.score)
+                    .slice(0, 20);
                 
                 sortedRankings.forEach((ranking, index) => {
                     const li = document.createElement('li');
                     li.className = 'ranking-item';
-                    li.innerHTML = `<span class="rank">${index + 1}</span>${ranking.name} - ${ranking.score}`;
+                    li.innerHTML = `
+                        <span class="rank">${index + 1}</span>
+                        ${ranking.name} - ${ranking.score} (Lv.${ranking.level})
+                        <br>
+                        <small>${new Date(ranking.date).toLocaleDateString()}</small>
+                    `;
                     rankingList.appendChild(li);
                 });
             }
@@ -933,10 +950,23 @@
                 this.gameOver = true;
                 this.state = "menu";
                 
+                // 게임오버 메시지 표시
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                this.ctx.fillStyle = '#fff';
+                this.ctx.font = '40px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 40);
+                
+                this.ctx.font = '24px Arial';
+                this.ctx.fillText(`Score: ${this.score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 10);
+                this.ctx.fillText(`Level: ${this.level}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 40);
+                
                 // 랭킹에 현재 점수 추가
                 this.rankings.push({
                     name: this.playerName,
                     score: this.score,
+                    level: this.level,
                     date: new Date().toISOString()
                 });
                 
