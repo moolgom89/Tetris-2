@@ -234,6 +234,7 @@
             <div class="controlRow">
                 <button class="controlBtn" id="dropBtn">↓</button>
                 <button class="controlBtn" id="hardDropBtn">⤓</button>
+                <button class="controlBtn" id="pauseBtn">⏸</button>
             </div>
         </div>
     </div>
@@ -385,6 +386,7 @@
                 this.state = "menu";
                 this.showMenu();
                 this.particles = [];
+                this.isPaused = false;
             }
 
             init() {
@@ -588,8 +590,27 @@
                 this.drawParticles();
             }
 
+            togglePause() {
+                if (this.state === "playing") {
+                    this.isPaused = !this.isPaused;
+                    if (this.isPaused) {
+                        this.state = "paused";
+                        // 일시정지 메시지 표시
+                        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                        this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                        this.ctx.fillStyle = '#fff';
+                        this.ctx.font = '30px Arial';
+                        this.ctx.textAlign = 'center';
+                        this.ctx.fillText('PAUSED', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+                    } else {
+                        this.state = "playing";
+                        this.gameLoop();
+                    }
+                }
+            }
+
             handleKeyPress(event) {
-                if (this.state !== "playing") return;
+                if (this.state !== "playing" && event.key !== 'Escape') return;
 
                 let moved = false;
                 let soundType = 'move';
@@ -646,8 +667,7 @@
                         }
                         break;
                     case 'Escape':
-                        this.state = "menu";
-                        this.showMenu();
+                        this.togglePause();
                         break;
                 }
                 
@@ -700,6 +720,7 @@
             const rotateBtn = document.getElementById('rotateBtn');
             const dropBtn = document.getElementById('dropBtn');
             const hardDropBtn = document.getElementById('hardDropBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
             const startBtn = document.getElementById('start-button');
 
             function handleButtonPress(key) {
@@ -719,7 +740,9 @@
                         if (!isPressed) {
                             isPressed = true;
                             handleButtonPress(key);
-                            intervalId = setInterval(() => handleButtonPress(key), 150);
+                            if (key !== ' ' && key !== 'Escape') { // 하드 드롭과 일시정지는 반복하지 않음
+                                intervalId = setInterval(() => handleButtonPress(key), 150);
+                            }
                         }
                     },
                     end: (e) => {
@@ -740,7 +763,8 @@
                 [rightBtn, 'ArrowRight'],
                 [rotateBtn, 'ArrowUp'],
                 [dropBtn, 'ArrowDown'],
-                [hardDropBtn, ' ']
+                [hardDropBtn, ' '],
+                [pauseBtn, 'Escape']
             ].forEach(([btn, key]) => {
                 if (btn) {
                     const handler = createButtonHandler(key);
