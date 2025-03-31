@@ -598,18 +598,16 @@
                             const newY = this.currentPiece.y + i;
                             const newX = this.currentPiece.x + j;
                             
-                            // 블록이 상단에 도달했는지 확인 (더 엄격한 체크)
-                            if (newY <= 2) {
-                                isGameOver = true;
-                                break;
-                            }
-                            
                             if (newY >= 0 && newY < GRID_HEIGHT && newX >= 0 && newX < GRID_WIDTH) {
                                 this.grid[newY][newX] = this.currentPiece.color;
+                                
+                                // 블록이 상단에 도달했는지 확인
+                                if (newY <= 1) {
+                                    isGameOver = true;
+                                }
                             }
                         }
                     }
-                    if (isGameOver) break;
                 }
                 
                 // 게임오버 조건 확인
@@ -871,12 +869,12 @@
                 // 게임오버 상태에서는 키 입력 무시
                 if (this.state === "gameOver") return;
                 
-                if (this.state !== "playing" && event.key !== 'Escape') return;
-
                 // 방향키 스크롤 방지
                 if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(event.key)) {
                     event.preventDefault();
                 }
+
+                if (this.state !== "playing" && event.key !== 'Escape') return;
 
                 let moved = false;
                 let soundType = 'move';
@@ -919,7 +917,6 @@
                             while (this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y + 1)) {
                                 this.currentPiece.y++;
                                 dropDistance++;
-                                moved = true;
                             }
                             if (dropDistance > 0) {
                                 soundType = 'hardDrop';
@@ -1019,23 +1016,27 @@
             }
 
             showGameOver() {
+                // 게임 상태를 즉시 변경하고 애니메이션 프레임 취소
                 this.state = "gameOver";
+                if (this.animationFrame) {
+                    cancelAnimationFrame(this.animationFrame);
+                }
                 
-                // 게임 루프 중지
-                cancelAnimationFrame(this.animationFrame);
+                // 현재 피스 제거
+                this.currentPiece = null;
                 
-                // 전체 화면을 어둡게 (더 진하게)
+                // 전체 화면을 어둡게
                 this.ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
                 this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
                 
-                // GAME OVER 텍스트 (더 크고 눈에 띄게)
+                // GAME OVER 텍스트
                 this.ctx.fillStyle = '#ff0000';
                 this.ctx.font = 'bold 80px Arial';
                 this.ctx.textAlign = 'center';
                 this.ctx.textBaseline = 'middle';
                 this.ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 120);
                 
-                // 최종 점수와 레벨 표시 (더 크게)
+                // 최종 점수와 레벨 표시
                 this.ctx.fillStyle = '#fff';
                 this.ctx.font = 'bold 48px Arial';
                 this.ctx.fillText(`Final Score: ${this.score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
@@ -1060,7 +1061,7 @@
                     r.date === this.rankings[this.rankings.length - 1].date
                 ) + 1;
                 
-                // 랭킹 위치 표시 (더 크게)
+                // 랭킹 위치 표시
                 this.ctx.fillStyle = '#FFD700';
                 this.ctx.fillText(`Rank: ${playerRank}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 120);
                 
@@ -1069,7 +1070,7 @@
                 const buttonHeight = 70;
                 const buttonY = CANVAS_HEIGHT / 2 + 180;
                 
-                // Restart 버튼 (더 크고 눈에 띄게)
+                // Restart 버튼
                 this.ctx.fillStyle = '#4CAF50';
                 this.ctx.fillRect(CANVAS_WIDTH / 2 - buttonWidth - 20, buttonY, buttonWidth, buttonHeight);
                 this.ctx.strokeStyle = '#fff';
@@ -1080,7 +1081,7 @@
                 this.ctx.font = 'bold 36px Arial';
                 this.ctx.fillText('Restart', CANVAS_WIDTH / 2 - buttonWidth + 90, buttonY + 43);
                 
-                // Menu 버튼 (더 크고 눈에 띄게)
+                // Menu 버튼
                 this.ctx.fillStyle = '#2196F3';
                 this.ctx.fillRect(CANVAS_WIDTH / 2 + 20, buttonY, buttonWidth, buttonHeight);
                 this.ctx.strokeStyle = '#fff';
@@ -1094,9 +1095,6 @@
                 
                 // 게임오버 사운드 재생
                 playSound('gameOver');
-                
-                // 현재 피스 제거
-                this.currentPiece = null;
             }
         }
 
