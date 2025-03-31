@@ -54,10 +54,17 @@
             padding: 5px;
             margin-bottom: 5px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 16px;
         }
         .ranking-item .rank {
             color: #FFD700;
             margin-right: 10px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .ranking-item small {
+            color: #aaa;
         }
         #game-container {
             display: flex;
@@ -1037,12 +1044,18 @@
                 // 게임오버 메시지를 화면 중앙에 표시
                 const centerY = CANVAS_HEIGHT / 2;
                 
-                // GAME OVER 텍스트
+                // GAME OVER 텍스트 (더 크고 눈에 띄게)
                 this.ctx.fillStyle = '#ff0000';
-                this.ctx.font = 'bold 80px Arial';
+                this.ctx.font = 'bold 90px Arial';
                 this.ctx.textAlign = 'center';
                 this.ctx.textBaseline = 'middle';
                 this.ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, centerY - 150);
+                
+                // 텍스트에 그림자 효과 추가
+                this.ctx.shadowColor = '#000';
+                this.ctx.shadowBlur = 10;
+                this.ctx.shadowOffsetX = 5;
+                this.ctx.shadowOffsetY = 5;
                 
                 // 최종 점수와 레벨 표시
                 this.ctx.fillStyle = '#fff';
@@ -1073,14 +1086,29 @@
                 this.ctx.fillStyle = '#FFD700';
                 this.ctx.fillText(`Rank: ${playerRank}`, CANVAS_WIDTH / 2, centerY + 70);
                 
-                // 버튼 크기와 위치 조정 (더 크고 중앙에 위치)
-                const buttonWidth = 250;
-                const buttonHeight = 80;
-                const buttonSpacing = 30;
+                // 버튼 크기와 위치 조정
+                const buttonWidth = 280;
+                const buttonHeight = 90;
+                const buttonSpacing = 40;
                 const buttonsY = centerY + 150;
                 
-                // Restart 버튼
-                this.ctx.fillStyle = '#4CAF50';
+                // 그림자 효과 제거
+                this.ctx.shadowColor = 'transparent';
+                this.ctx.shadowBlur = 0;
+                this.ctx.shadowOffsetX = 0;
+                this.ctx.shadowOffsetY = 0;
+                
+                // Restart 버튼 (더 크고 눈에 띄게)
+                const restartGradient = this.ctx.createLinearGradient(
+                    CANVAS_WIDTH / 2 - buttonWidth - buttonSpacing / 2,
+                    buttonsY,
+                    CANVAS_WIDTH / 2 - buttonWidth - buttonSpacing / 2,
+                    buttonsY + buttonHeight
+                );
+                restartGradient.addColorStop(0, '#4CAF50');
+                restartGradient.addColorStop(1, '#45a049');
+                
+                this.ctx.fillStyle = restartGradient;
                 this.ctx.fillRect(
                     CANVAS_WIDTH / 2 - buttonWidth - buttonSpacing / 2,
                     buttonsY,
@@ -1096,16 +1124,31 @@
                     buttonHeight
                 );
                 
+                // Restart 버튼 텍스트에 그림자 효과
+                this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                this.ctx.shadowBlur = 5;
+                this.ctx.shadowOffsetX = 2;
+                this.ctx.shadowOffsetY = 2;
+                
                 this.ctx.fillStyle = '#fff';
-                this.ctx.font = 'bold 40px Arial';
+                this.ctx.font = 'bold 44px Arial';
                 this.ctx.fillText(
                     'Restart',
                     CANVAS_WIDTH / 2 - buttonWidth / 2 - buttonSpacing / 2,
                     buttonsY + buttonHeight / 2 + 5
                 );
                 
-                // Menu 버튼
-                this.ctx.fillStyle = '#2196F3';
+                // Menu 버튼 (더 크고 눈에 띄게)
+                const menuGradient = this.ctx.createLinearGradient(
+                    CANVAS_WIDTH / 2 + buttonSpacing / 2,
+                    buttonsY,
+                    CANVAS_WIDTH / 2 + buttonSpacing / 2,
+                    buttonsY + buttonHeight
+                );
+                menuGradient.addColorStop(0, '#2196F3');
+                menuGradient.addColorStop(1, '#1e88e5');
+                
+                this.ctx.fillStyle = menuGradient;
                 this.ctx.fillRect(
                     CANVAS_WIDTH / 2 + buttonSpacing / 2,
                     buttonsY,
