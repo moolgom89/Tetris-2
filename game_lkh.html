@@ -785,7 +785,7 @@
             }
 
             togglePause() {
-                if (this.state === "playing") {
+                if (this.state === "playing" || this.state === "paused") {
                     this.isPaused = !this.isPaused;
                     if (this.isPaused) {
                         this.state = "paused";
@@ -805,6 +805,11 @@
 
             handleKeyPress(event) {
                 if (this.state !== "playing" && event.key !== 'Escape') return;
+
+                // 방향키 스크롤 방지
+                if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(event.key)) {
+                    event.preventDefault();
+                }
 
                 let moved = false;
                 let soundType = 'move';
