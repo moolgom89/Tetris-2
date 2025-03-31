@@ -271,7 +271,7 @@
         ];
 
         // Sound effects using Web Audio API
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
         // Create a more pleasant synth sound
         function createSynth(frequency, duration, type = 'sine', gain = 0.2) {
@@ -315,16 +315,26 @@
 
         // Function to play sound
         function playSound(soundName) {
+            if (!audioContext) return;
+            
             try {
+                // 오디오 컨텍스트가 suspended 상태인 경우 resume
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                
                 switch(soundName) {
                     case 'move':
-                        createSynth(440, 0.15, 'sine'); // A4
+                        createSynth(440, 0.1, 'sine', 0.3); // A4
                         break;
                     case 'rotate':
-                        createSynth(587.33, 0.2, 'triangle'); // D5
+                        createSynth(587.33, 0.1, 'triangle', 0.3); // D5
                         break;
                     case 'drop':
-                        createSynth(392, 0.3, 'square'); // G4
+                        createSynth(392, 0.2, 'square', 0.3); // G4
+                        break;
+                    case 'hardDrop':
+                        createSynth(523.25, 0.3, 'square', 0.4); // C5
                         break;
                     case 'clear':
                         // 더 화려한 클리어 사운드
@@ -334,7 +344,6 @@
                         setTimeout(() => createSynth(1567.98, 0.4, 'sine', 0.2), 300); // G6
                         break;
                     case 'gameOver':
-                        // 드라마틱한 게임오버 사운드
                         createSynth(261.63, 0.6, 'sine', 0.4); // C4
                         setTimeout(() => createSynth(207.65, 0.6, 'sine', 0.4), 100); // Ab3
                         setTimeout(() => createSynth(164.81, 0.8, 'sine', 0.4), 200); // E3
@@ -347,9 +356,11 @@
 
         // Initialize audio context on first interaction
         document.addEventListener('click', function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
             audioContext.resume();
-            document.removeEventListener('click', initAudio);
-        }, { once: true });
+        }, { once: false });
 
         class Tetris {
             constructor() {
@@ -581,6 +592,8 @@
                 if (this.state !== "playing") return;
 
                 let moved = false;
+                let soundType = 'move';
+
                 switch(event.key) {
                     case 'ArrowLeft':
                         if (this.validMove(this.currentPiece, this.currentPiece.x - 1, this.currentPiece.y)) {
@@ -598,6 +611,7 @@
                         if (this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y + 1)) {
                             this.currentPiece.y++;
                             moved = true;
+                            soundType = 'drop';
                         }
                         break;
                     case 'ArrowUp':
@@ -606,12 +620,29 @@
                         if (this.validMove({...this.currentPiece, shape: rotated},
                             this.currentPiece.x, this.currentPiece.y)) {
                             this.currentPiece.shape = rotated;
+                            moved = true;
+                            soundType = 'rotate';
                         }
                         break;
                     case ' ':
+                        let dropDistance = 0;
                         while (this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y + 1)) {
                             this.currentPiece.y++;
+                            dropDistance++;
                             moved = true;
+                        }
+                        if (dropDistance > 0) {
+                            soundType = 'hardDrop';
+                            this.mergePiece();
+                            this.clearLines();
+                            this.currentPiece = this.newPiece();
+                            if (!this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y)) {
+                                this.gameOver = true;
+                                this.state = "menu";
+                                playSound('gameOver');
+                                this.showMenu();
+                                return;
+                            }
                         }
                         break;
                     case 'Escape':
@@ -621,7 +652,7 @@
                 }
                 
                 if (moved) {
-                    playSound('move');
+                    playSound(soundType);
                 }
                 
                 this.draw();
