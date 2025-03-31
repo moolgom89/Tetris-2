@@ -109,9 +109,11 @@
             margin: 0;
             opacity: 1;
             visibility: visible;
+            cursor: pointer;
         }
         .controlBtn:active {
             background-color: rgba(255, 255, 255, 0.3);
+            transform: scale(0.95);
         }
         #startButton {
             padding: 10px 20px;
@@ -218,14 +220,12 @@
         </div>
         <div id="mobileControls">
             <div class="controlRow">
-                <button class="controlBtn" id="rotateBtn">↻</button>
-            </div>
-            <div class="controlRow">
                 <button class="controlBtn" id="leftBtn">←</button>
-                <button class="controlBtn" id="dropBtn">↓</button>
+                <button class="controlBtn" id="rotateBtn">↻</button>
                 <button class="controlBtn" id="rightBtn">→</button>
             </div>
             <div class="controlRow">
+                <button class="controlBtn" id="dropBtn">↓</button>
                 <button class="controlBtn" id="hardDropBtn">⤓</button>
             </div>
         </div>
