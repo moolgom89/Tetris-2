@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tetris</title>
     <style>
         body {
@@ -11,15 +11,17 @@
             flex-direction: column;
             align-items: center;
             margin: 0;
+            padding: 0;
             min-height: 100vh;
             font-family: Arial, sans-serif;
+            touch-action: none;
         }
         #game-container {
             position: relative;
             margin-top: 20px;
         }
         canvas {
-            border: 2px solid #fff;
+            border: 2px solid #333;
         }
         #menu {
             position: absolute;
@@ -59,6 +61,66 @@
             justify-content: center;
             width: 100%;
         }
+        #mobileControls {
+            display: none;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 300px;
+            position: relative;
+            z-index: 1000;
+        }
+        .controlRow {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .controlBtn {
+            width: 70px;
+            height: 70px;
+            margin: 0 10px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            font-size: 28px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .controlBtn:active {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        #startButton {
+            padding: 10px 20px;
+            font-size: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+        @media (max-width: 768px) {
+            #game-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
+                padding: 10px;
+                box-sizing: border-box;
+            }
+            canvas {
+                max-width: 100%;
+                height: auto;
+            }
+            #mobileControls {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -71,6 +133,19 @@
         <div id="score-display">
             Score: <span id="score">0</span>
             Level: <span id="level">1</span>
+        </div>
+        <div id="mobileControls">
+            <div class="controlRow">
+                <button class="controlBtn" id="rotateBtn">↻</button>
+            </div>
+            <div class="controlRow">
+                <button class="controlBtn" id="leftBtn">←</button>
+                <button class="controlBtn" id="dropBtn">↓</button>
+                <button class="controlBtn" id="rightBtn">→</button>
+            </div>
+            <div class="controlRow">
+                <button class="controlBtn" id="hardDropBtn">⤓</button>
+            </div>
         </div>
     </div>
     <script>
@@ -492,8 +567,61 @@
 
         // Start the game
         window.onload = () => {
-            new Tetris();
+            window.tetrisGame = new Tetris();
+            initMobileControls();
+            resizeCanvas();
         };
+
+        // Initialize mobile controls
+        function initMobileControls() {
+            const game = window.tetrisGame; // 게임 인스턴스 참조
+            const leftBtn = document.getElementById('leftBtn');
+            const rightBtn = document.getElementById('rightBtn');
+            const rotateBtn = document.getElementById('rotateBtn');
+            const dropBtn = document.getElementById('dropBtn');
+            const hardDropBtn = document.getElementById('hardDropBtn');
+
+            function createButtonHandler(key) {
+                return (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const keyEvent = { key: key };
+                    if (game) {
+                        game.handleKeyPress(keyEvent);
+                    }
+                };
+            }
+
+            // 터치 이벤트 리스너 추가
+            [
+                [leftBtn, 'ArrowLeft'],
+                [rightBtn, 'ArrowRight'],
+                [rotateBtn, 'ArrowUp'],
+                [dropBtn, 'ArrowDown'],
+                [hardDropBtn, ' ']
+            ].forEach(([btn, key]) => {
+                if (btn) {
+                    ['touchstart', 'mousedown'].forEach(eventType => {
+                        btn.addEventListener(eventType, createButtonHandler(key), { passive: false });
+                    });
+                }
+            });
+
+            // 기본 터치 동작 방지
+            document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+            document.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+        }
+
+        // Add responsive canvas sizing
+        function resizeCanvas() {
+            const container = document.getElementById('game-container');
+            const canvas = document.getElementById('game-canvas');
+            const maxWidth = Math.min(window.innerWidth - 20, CANVAS_WIDTH);
+            const scale = maxWidth / CANVAS_WIDTH;
+            
+            canvas.style.width = `${CANVAS_WIDTH * scale}px`;
+            canvas.style.height = `${CANVAS_HEIGHT * scale}px`;
+        }
     </script>
 </body>
 </html> 
