@@ -577,13 +577,14 @@
                         if (piece.shape[i][j]) {
                             const newX = x + j;
                             const newY = y + i;
+                            // 상단 충돌 체크
+                            if (newY <= 1 && this.grid[newY][newX]) {
+                                this.state = "gameOver";
+                                this.gameOver();
+                                return false;
+                            }
                             if (newX < 0 || newX >= GRID_WIDTH || newY >= GRID_HEIGHT ||
                                 (newY >= 0 && this.grid[newY][newX])) {
-                                // 상단에 닿았는지 확인
-                                if (newY <= 1) {  // 상단 2줄에 닿으면 게임오버
-                                    this.gameOver();
-                                    return false;
-                                }
                                 return false;
                             }
                         }
@@ -597,7 +598,9 @@
                     for (let j = 0; j < this.currentPiece.shape[i].length; j++) {
                         if (this.currentPiece.shape[i][j]) {
                             const newY = this.currentPiece.y + i;
-                            if (newY <= 0) {
+                            // 상단 도달 체크
+                            if (newY <= 1) {
+                                this.state = "gameOver";
                                 this.gameOver();
                                 return;
                             }
@@ -935,10 +938,13 @@
                         this.currentPiece.y++;
                     } else {
                         this.mergePiece();
+                        // 게임오버 상태가 아닐 때만 새 블록 생성
                         if (this.state === "playing") {
                             this.clearLines();
                             this.currentPiece = this.newPiece();
+                            // 새 블록이 생성될 공간이 없으면 게임오버
                             if (!this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y)) {
+                                this.state = "gameOver";
                                 this.gameOver();
                                 return;
                             }
@@ -993,8 +999,6 @@
             }
 
             gameOver() {
-                this.state = "gameOver";  // 상태를 gameOver로 변경
-                
                 // 게임오버 메시지와 최종 점수 표시
                 this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
                 this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
