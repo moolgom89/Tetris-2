@@ -500,7 +500,7 @@
                 this.particles = [];
                 this.isPaused = false;
 
-                // Canvas click 이벤트 리스너 추가
+                // Canvas click 이벤트 리스너 수정
                 this.canvas.addEventListener('click', (e) => {
                     if (this.state === "gameOver") {
                         const rect = this.canvas.getBoundingClientRect();
@@ -511,17 +511,22 @@
                         const adjustedX = x / scale;
                         const adjustedY = y / scale;
                         
+                        const centerY = CANVAS_HEIGHT / 2;
+                        const buttonWidth = 250;
+                        const buttonHeight = 80;
+                        const buttonSpacing = 30;
+                        const buttonsY = centerY + 150;
+                        
                         // Restart 버튼 영역 확인
-                        if (adjustedY >= CANVAS_HEIGHT / 2 + 120 && 
-                            adjustedY <= CANVAS_HEIGHT / 2 + 170) {
-                            if (adjustedX >= CANVAS_WIDTH / 2 - 200 && 
-                                adjustedX <= CANVAS_WIDTH / 2 - 20) {
+                        if (adjustedY >= buttonsY && adjustedY <= buttonsY + buttonHeight) {
+                            if (adjustedX >= CANVAS_WIDTH / 2 - buttonWidth - buttonSpacing / 2 && 
+                                adjustedX <= CANVAS_WIDTH / 2 - buttonSpacing / 2) {
                                 // Restart
                                 this.playerName = this.playerName || "Player";
                                 document.getElementById('current-player').textContent = `Player: ${this.playerName}`;
                                 this.startGame();
-                            } else if (adjustedX >= CANVAS_WIDTH / 2 + 20 && 
-                                     adjustedX <= CANVAS_WIDTH / 2 + 200) {
+                            } else if (adjustedX >= CANVAS_WIDTH / 2 + buttonSpacing / 2 && 
+                                     adjustedX <= CANVAS_WIDTH / 2 + buttonWidth + buttonSpacing / 2) {
                                 // Menu
                                 this.state = "menu";
                                 this.showMenu();
@@ -1029,18 +1034,21 @@
                 this.ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
                 this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
                 
+                // 게임오버 메시지를 화면 중앙에 표시
+                const centerY = CANVAS_HEIGHT / 2;
+                
                 // GAME OVER 텍스트
                 this.ctx.fillStyle = '#ff0000';
                 this.ctx.font = 'bold 80px Arial';
                 this.ctx.textAlign = 'center';
                 this.ctx.textBaseline = 'middle';
-                this.ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 120);
+                this.ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, centerY - 150);
                 
                 // 최종 점수와 레벨 표시
                 this.ctx.fillStyle = '#fff';
                 this.ctx.font = 'bold 48px Arial';
-                this.ctx.fillText(`Final Score: ${this.score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
-                this.ctx.fillText(`Level: ${this.level}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 60);
+                this.ctx.fillText(`Final Score: ${this.score}`, CANVAS_WIDTH / 2, centerY - 50);
+                this.ctx.fillText(`Level: ${this.level}`, CANVAS_WIDTH / 2, centerY + 10);
                 
                 // 랭킹에 현재 점수 추가
                 this.rankings.push({
@@ -1063,32 +1071,61 @@
                 
                 // 랭킹 위치 표시
                 this.ctx.fillStyle = '#FFD700';
-                this.ctx.fillText(`Rank: ${playerRank}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 120);
+                this.ctx.fillText(`Rank: ${playerRank}`, CANVAS_WIDTH / 2, centerY + 70);
                 
-                // 버튼 크기와 위치 조정
-                const buttonWidth = 220;
-                const buttonHeight = 70;
-                const buttonY = CANVAS_HEIGHT / 2 + 180;
+                // 버튼 크기와 위치 조정 (더 크고 중앙에 위치)
+                const buttonWidth = 250;
+                const buttonHeight = 80;
+                const buttonSpacing = 30;
+                const buttonsY = centerY + 150;
                 
                 // Restart 버튼
                 this.ctx.fillStyle = '#4CAF50';
-                this.ctx.fillRect(CANVAS_WIDTH / 2 - buttonWidth - 20, buttonY, buttonWidth, buttonHeight);
+                this.ctx.fillRect(
+                    CANVAS_WIDTH / 2 - buttonWidth - buttonSpacing / 2,
+                    buttonsY,
+                    buttonWidth,
+                    buttonHeight
+                );
                 this.ctx.strokeStyle = '#fff';
                 this.ctx.lineWidth = 4;
-                this.ctx.strokeRect(CANVAS_WIDTH / 2 - buttonWidth - 20, buttonY, buttonWidth, buttonHeight);
+                this.ctx.strokeRect(
+                    CANVAS_WIDTH / 2 - buttonWidth - buttonSpacing / 2,
+                    buttonsY,
+                    buttonWidth,
+                    buttonHeight
+                );
                 
                 this.ctx.fillStyle = '#fff';
-                this.ctx.font = 'bold 36px Arial';
-                this.ctx.fillText('Restart', CANVAS_WIDTH / 2 - buttonWidth + 90, buttonY + 43);
+                this.ctx.font = 'bold 40px Arial';
+                this.ctx.fillText(
+                    'Restart',
+                    CANVAS_WIDTH / 2 - buttonWidth / 2 - buttonSpacing / 2,
+                    buttonsY + buttonHeight / 2 + 5
+                );
                 
                 // Menu 버튼
                 this.ctx.fillStyle = '#2196F3';
-                this.ctx.fillRect(CANVAS_WIDTH / 2 + 20, buttonY, buttonWidth, buttonHeight);
+                this.ctx.fillRect(
+                    CANVAS_WIDTH / 2 + buttonSpacing / 2,
+                    buttonsY,
+                    buttonWidth,
+                    buttonHeight
+                );
                 this.ctx.strokeStyle = '#fff';
-                this.ctx.strokeRect(CANVAS_WIDTH / 2 + 20, buttonY, buttonWidth, buttonHeight);
+                this.ctx.strokeRect(
+                    CANVAS_WIDTH / 2 + buttonSpacing / 2,
+                    buttonsY,
+                    buttonWidth,
+                    buttonHeight
+                );
                 
                 this.ctx.fillStyle = '#fff';
-                this.ctx.fillText('Menu', CANVAS_WIDTH / 2 + 130, buttonY + 43);
+                this.ctx.fillText(
+                    'Menu',
+                    CANVAS_WIDTH / 2 + buttonWidth / 2 + buttonSpacing / 2,
+                    buttonsY + buttonHeight / 2 + 5
+                );
                 
                 // 랭킹 디스플레이 업데이트
                 this.updateRankingDisplay();
