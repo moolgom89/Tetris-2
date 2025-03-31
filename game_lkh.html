@@ -567,6 +567,10 @@
                             const newY = y + i;
                             if (newX < 0 || newX >= GRID_WIDTH || newY >= GRID_HEIGHT ||
                                 (newY >= 0 && this.grid[newY][newX])) {
+                                if (newY <= 0) {
+                                    this.gameOver();
+                                    return false;
+                                }
                                 return false;
                             }
                         }
@@ -579,7 +583,12 @@
                 for (let i = 0; i < this.currentPiece.shape.length; i++) {
                     for (let j = 0; j < this.currentPiece.shape[i].length; j++) {
                         if (this.currentPiece.shape[i][j]) {
-                            this.grid[this.currentPiece.y + i][this.currentPiece.x + j] = this.currentPiece.color;
+                            const newY = this.currentPiece.y + i;
+                            if (newY <= 0) {
+                                this.gameOver();
+                                return;
+                            }
+                            this.grid[newY][this.currentPiece.x + j] = this.currentPiece.color;
                         }
                     }
                 }
@@ -913,18 +922,22 @@
                         this.currentPiece.y++;
                     } else {
                         this.mergePiece();
-                        this.clearLines();
-                        this.currentPiece = this.newPiece();
-                        if (!this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y)) {
-                            this.gameOver();
-                            return;
+                        if (this.state === "playing") {
+                            this.clearLines();
+                            this.currentPiece = this.newPiece();
+                            if (!this.validMove(this.currentPiece, this.currentPiece.x, this.currentPiece.y)) {
+                                this.gameOver();
+                                return;
+                            }
                         }
                     }
                     this.lastFall = now;
                 }
 
                 this.draw();
-                requestAnimationFrame(() => this.gameLoop());
+                if (this.state === "playing") {
+                    requestAnimationFrame(() => this.gameLoop());
+                }
             }
 
             // Add hard drop method
