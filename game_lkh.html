@@ -21,6 +21,7 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
+            -webkit-overflow-scrolling: none;
         }
         .game-wrapper {
             display: flex;
@@ -190,6 +191,7 @@
                 width: 100%;
                 overflow: hidden;
                 padding-top: 10px;
+                -webkit-overflow-scrolling: none;
             }
             #game-container {
                 padding: 0;
@@ -947,7 +949,7 @@
 
         // Initialize mobile controls
         function initMobileControls() {
-            const game = window.tetrisGame; // 게임 인스턴스 참조
+            const game = window.tetrisGame;
             const leftBtn = document.getElementById('leftBtn');
             const rightBtn = document.getElementById('rightBtn');
             const rotateBtn = document.getElementById('rotateBtn');
@@ -955,6 +957,31 @@
             const hardDropBtn = document.getElementById('hardDropBtn');
             const pauseBtn = document.getElementById('pauseBtn');
             const startBtn = document.getElementById('start-button');
+
+            // Prevent scrolling on MacBook
+            document.addEventListener('wheel', (e) => {
+                if (game && game.state === "playing") {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            document.addEventListener('touchmove', (e) => {
+                if (game && game.state === "playing") {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            document.addEventListener('gesturestart', (e) => {
+                if (game && game.state === "playing") {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            document.addEventListener('gesturechange', (e) => {
+                if (game && game.state === "playing") {
+                    e.preventDefault();
+                }
+            }, { passive: false });
 
             function handleButtonPress(key) {
                 if (game && game.state === "playing") {
