@@ -622,6 +622,9 @@
                     }
                 }
                 
+                // 블록이 바닥에 닿을 때 효과음 재생
+                playSound('drop');
+                
                 // 게임오버 조건 확인
                 if (isGameOver) {
                     this.showGameOver();
@@ -1037,6 +1040,9 @@
                 // 현재 피스 제거
                 this.currentPiece = null;
                 
+                // 게임오버 사운드 재생
+                playSound('gameOver');
+                
                 // 전체 화면을 어둡게
                 this.ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
                 this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -1044,18 +1050,18 @@
                 // 게임오버 메시지를 화면 중앙에 표시
                 const centerY = CANVAS_HEIGHT / 2;
                 
-                // GAME OVER 텍스트 (더 크고 눈에 띄게)
+                // GAME OVER 텍스트에 그림자 효과 추가
+                this.ctx.shadowColor = '#000';
+                this.ctx.shadowBlur = 15;
+                this.ctx.shadowOffsetX = 5;
+                this.ctx.shadowOffsetY = 5;
+                
+                // GAME OVER 텍스트
                 this.ctx.fillStyle = '#ff0000';
                 this.ctx.font = 'bold 90px Arial';
                 this.ctx.textAlign = 'center';
                 this.ctx.textBaseline = 'middle';
                 this.ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, centerY - 150);
-                
-                // 텍스트에 그림자 효과 추가
-                this.ctx.shadowColor = '#000';
-                this.ctx.shadowBlur = 10;
-                this.ctx.shadowOffsetX = 5;
-                this.ctx.shadowOffsetY = 5;
                 
                 // 최종 점수와 레벨 표시
                 this.ctx.fillStyle = '#fff';
@@ -1086,19 +1092,19 @@
                 this.ctx.fillStyle = '#FFD700';
                 this.ctx.fillText(`Rank: ${playerRank}`, CANVAS_WIDTH / 2, centerY + 70);
                 
-                // 버튼 크기와 위치 조정
-                const buttonWidth = 280;
-                const buttonHeight = 90;
-                const buttonSpacing = 40;
-                const buttonsY = centerY + 150;
-                
                 // 그림자 효과 제거
                 this.ctx.shadowColor = 'transparent';
                 this.ctx.shadowBlur = 0;
                 this.ctx.shadowOffsetX = 0;
                 this.ctx.shadowOffsetY = 0;
                 
-                // Restart 버튼 (더 크고 눈에 띄게)
+                // 버튼 크기와 위치 조정
+                const buttonWidth = 280;
+                const buttonHeight = 90;
+                const buttonSpacing = 40;
+                const buttonsY = centerY + 150;
+                
+                // Restart 버튼
                 const restartGradient = this.ctx.createLinearGradient(
                     CANVAS_WIDTH / 2 - buttonWidth - buttonSpacing / 2,
                     buttonsY,
@@ -1115,6 +1121,8 @@
                     buttonWidth,
                     buttonHeight
                 );
+                
+                // Restart 버튼 테두리
                 this.ctx.strokeStyle = '#fff';
                 this.ctx.lineWidth = 4;
                 this.ctx.strokeRect(
@@ -1124,12 +1132,7 @@
                     buttonHeight
                 );
                 
-                // Restart 버튼 텍스트에 그림자 효과
-                this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-                this.ctx.shadowBlur = 5;
-                this.ctx.shadowOffsetX = 2;
-                this.ctx.shadowOffsetY = 2;
-                
+                // Restart 버튼 텍스트
                 this.ctx.fillStyle = '#fff';
                 this.ctx.font = 'bold 44px Arial';
                 this.ctx.fillText(
@@ -1138,7 +1141,7 @@
                     buttonsY + buttonHeight / 2 + 5
                 );
                 
-                // Menu 버튼 (더 크고 눈에 띄게)
+                // Menu 버튼
                 const menuGradient = this.ctx.createLinearGradient(
                     CANVAS_WIDTH / 2 + buttonSpacing / 2,
                     buttonsY,
@@ -1155,6 +1158,8 @@
                     buttonWidth,
                     buttonHeight
                 );
+                
+                // Menu 버튼 테두리
                 this.ctx.strokeStyle = '#fff';
                 this.ctx.strokeRect(
                     CANVAS_WIDTH / 2 + buttonSpacing / 2,
@@ -1163,6 +1168,7 @@
                     buttonHeight
                 );
                 
+                // Menu 버튼 텍스트
                 this.ctx.fillStyle = '#fff';
                 this.ctx.fillText(
                     'Menu',
@@ -1172,9 +1178,6 @@
                 
                 // 랭킹 디스플레이 업데이트
                 this.updateRankingDisplay();
-                
-                // 게임오버 사운드 재생
-                playSound('gameOver');
             }
         }
 
