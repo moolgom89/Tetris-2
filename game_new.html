@@ -87,8 +87,10 @@
         .controlRow {
             display: flex;
             justify-content: center;
+            align-items: center;
             margin: 10px 0;
             gap: 20px;
+            width: 100%;
         }
         .controlBtn {
             width: 60px;
@@ -104,6 +106,9 @@
             align-items: center;
             justify-content: center;
             padding: 0;
+            margin: 0;
+            opacity: 1;
+            visibility: visible;
         }
         .controlBtn:active {
             background-color: rgba(255, 255, 255, 0.3);
@@ -149,6 +154,18 @@
                 max-width: 320px;
                 margin-top: 10px;
                 touch-action: none;
+                opacity: 1;
+                visibility: visible;
+            }
+            .controlRow {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin: 10px 0;
+                gap: 20px;
+                width: 100%;
+                opacity: 1;
+                visibility: visible;
             }
             .controlBtn {
                 width: 60px;
@@ -157,6 +174,9 @@
                 touch-action: none;
                 user-select: none;
                 -webkit-user-select: none;
+                opacity: 1;
+                visibility: visible;
+                display: flex !important;
             }
             #start-button {
                 font-size: 24px;
